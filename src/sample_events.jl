@@ -2,10 +2,11 @@
 # Show a sample of a few events
 #
 
-struct AbstractEvent end
+abstract type AbstractEvent end
 
 struct BeginMission <: AbstractEvent
     UID::Int64
+    first::Int64
 end
 
 struct CompleteMission <: AbstractEvent
@@ -29,7 +30,11 @@ struct LimitedEvent <: AbstractEvent
     attempts::Int64
 end
 
-(pass = 101, fail = :LOM)
+being = BeginMission(
+    100,
+    101
+)
+
 
 # Define the launch event
 launch = Event(
@@ -58,6 +63,23 @@ recycle = LimitedEvent(
     3
 )
 
-complete = <: AbstractEvent(
+complete = CompleteMission(
     104
 )
+
+
+# Collect all the events to an array
+
+events = [
+    launch,
+    orbit,
+    dock,
+    recycle,
+    complete
+]
+
+# Process events to lookup table
+lookup = Dict()
+for ev in events
+    lookup[ev.UID] = ev
+end
