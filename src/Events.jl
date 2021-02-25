@@ -28,7 +28,7 @@ struct Event <: AbstractBernoulliEvent
     to::Dict
 end
 
-struct LimitedEvent <: AbstractBernoulliEvent
+mutable struct LimitedEvent <: AbstractBernoulliEvent
     UID::Int64
     name::String
     pₛ::Number
@@ -53,6 +53,15 @@ next(e::BeginMission) = e.first
 next(e::AbstractBernoulliEvent) = e.to[attempt(e)]
 next(e::CompleteMission) = :COMPLETE
 next(e::LossOfMission) = :LOM
+
+function next(e::LimitedEvent)
+    if e.attempts < 1
+        return :LOM
+    else        
+        e.attempts -= 1
+        return e.to[attempt(e)]
+    end
+end
 
 is_success(e::AbstractTerminalEvent) = typeof(e) == CompleteMission ? true : false
 
