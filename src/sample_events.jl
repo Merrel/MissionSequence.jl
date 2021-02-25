@@ -95,10 +95,12 @@ events = [
 ]
 
 # Process events to lookup table
-lookup = Dict()
+event_dict = Dict()
 for ev in events
-    lookup[ev.UID] = ev
+    event_dict[ev.UID] = ev
 end
+
+lookup(uid::Union{Symbol, Int64}, d::Dict) = d[uid]
 
 
 function attempt(e::AbstractEvent)
@@ -125,12 +127,12 @@ function run_sequence(first_event::BeginMission)
     while !(typeof(e) <: AbstractTerminalEvent)
         i += 1
         # Try the event and get the next one
-        e = lookup[u]
+        e = lookup(u, event_dict)
         u = next(e)
     end
     return is_success(e)
 end
 
-n_samples = 1e6
+n_samples = 1e7
 samples = [run_sequence(start) for i in 1:n_samples]
 sum(samples) / n_samples
