@@ -1,0 +1,35 @@
+#
+# A01 Mission Events
+#
+
+Start:
+  first: 101
+
+Launch:
+  UID:  101
+  prob: 0.9
+  dest:
+    pass: 102
+    fail: LOM
+
+Orbit Insertion:
+  UID:  102
+  prob: 0.95
+  dest:
+    pass: 103
+    fail: LOM
+
+Docking:
+  UID:  103
+  prob: 0.75
+  dest:
+    pass: COMPLETE
+    fail: 104
+
+Recycle:
+  UID:  104
+  prob: 0.80
+  dest:
+    pass: 103
+    fail: LOM
+  attempts: 3
