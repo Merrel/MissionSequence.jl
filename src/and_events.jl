@@ -18,11 +18,21 @@ function load_events(yml::String)
 
     # Loop through the spec
     for (name, spec) in event_spec
-        if "first"  in keys(spec)
-            ev = BeginMission(:START, spec["first"])
-        elseif "attempts" in keys(spec)
+
+        println(name)
+        println(spec)
+
+        if spec["type"] == "BeginMission"
+            ev = BeginMission(spec["UID"], name, spec["dest"])
+
+        elseif spec["type"] == "LimitedEvent"
             ev = LimitedEvent(spec["UID"], name, spec["prob"], spec["dest"], spec["attempts"])
             process_dst!(ev)
+
+        elseif spec["type"] == "AndEvent"
+            ev = AndEvent(spec["UID"], name, spec["and"], spec["dest"])
+            process_dst!(ev)
+
         else
             ev = Event(spec["UID"], name, spec["prob"], spec["dest"])
             process_dst!(ev)
@@ -35,7 +45,7 @@ end
 
 db = load_events("src/A0b_Events.yaml")
 
-init_events = filter(e -> e.second.UID == :START, db)
+init_events = filter(e -> typeof(e.second) == BeginMission, db)
 
 # queue
 queue = [db[:START], db[:START]]

@@ -9,8 +9,9 @@ abstract type AbstractTerminalEvent <: AbstractEvent end
 abstract type AbstractANDEvent <: AbstractEvent end
 
 struct BeginMission <: AbstractEvent
-    UID::Symbol
-    first::Int64
+    UID::Int64
+    name::String
+    to::Int64
 end
 
 struct CompleteMission <: AbstractTerminalEvent
@@ -40,7 +41,7 @@ end
 struct AndEvent <: AbstractBernoulliEvent
     UID::Int64
     name::String
-    and::Array{AbstractEvent,1}
+    and::Array{String,1}
     to::Dict
 end
 

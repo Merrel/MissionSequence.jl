@@ -37,7 +37,7 @@ Orbit Insertion:
 
 AllLaunchSuccess:
   UID: 201
-  type: AND
+  type: AndEvent
   and:            # and event specifys completion of trees before it
     - AE_Mission
     - DE_Mission
