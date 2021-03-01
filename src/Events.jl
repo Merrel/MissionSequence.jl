@@ -6,7 +6,7 @@ using Distributions
 abstract type AbstractEvent end
 abstract type AbstractBernoulliEvent <: AbstractEvent end
 abstract type AbstractTerminalEvent <: AbstractEvent end
-abstract type AbstractANDEvent <: AbstractEvent end
+# abstract type AbstractANDEvent <: AbstractEvent end
 
 struct BeginMission <: AbstractEvent
     UID::Int64
@@ -38,7 +38,7 @@ mutable struct LimitedEvent <: AbstractBernoulliEvent
     attempts::Int64
 end
 
-struct AndEvent <: AbstractBernoulliEvent
+struct AndEvent <: AbstractTerminalEvent
     UID::Int64
     name::String
     and::Array{String,1}
@@ -58,7 +58,7 @@ function attempt(e::AbstractEvent)
 end
 
 
-next(e::BeginMission) = e.first
+next(e::BeginMission) = e.to
 next(e::AbstractBernoulliEvent) = e.to[attempt(e)]
 next(e::CompleteMission) = :COMPLETE
 next(e::LossOfMission) = :LOM
@@ -96,7 +96,7 @@ function run_sequence(first_event::BeginMission)
     return is_success(e)
 end
 
-function process_dst!(ev::AbstractBernoulliEvent)
+function process_dst!(ev::Union{AbstractBernoulliEvent, AndEvent})
     for (k, v) in ev.to
         if typeof(v) == String
             ev.to[k] = Symbol(v)

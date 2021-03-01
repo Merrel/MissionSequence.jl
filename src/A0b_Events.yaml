@@ -27,26 +27,26 @@ Launch:
 Orbit Insertion:
   UID:  102
   type: Event
-  prob: 0.999
+  prob: 0.99
   dest:
-    pass: 103
-    fail: COMPLETE
+    pass: 200
+    fail: LOM
 
 # -------------------------------------
 # Define the AE+DE combined tree
 
 AllLaunchSuccess:
-  UID: 201
+  UID: 200
   type: AndEvent
   and:            # and event specifys completion of trees before it
     - AE_Mission
     - DE_Mission
   dest:
-    pass: 103
+    pass: 201
     fail: LOM
 
 Docking:
-  UID:  103
+  UID:  201
   type: Event
   prob: 0.95
   dest:
@@ -54,10 +54,10 @@ Docking:
     fail: 104
 
 Recycle:
-  UID:  104
+  UID:  202
   type: LimitedEvent
   prob: 0.70
   dest:
-    pass: 103
+    pass: 201
     fail: LOM
   attempts: 10
