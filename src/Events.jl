@@ -6,6 +6,7 @@ using Distributions
 abstract type AbstractEvent end
 abstract type AbstractBernoulliEvent <: AbstractEvent end
 abstract type AbstractTerminalEvent <: AbstractEvent end
+abstract type AbstractANDEvent <: AbstractEvent end
 
 struct BeginMission <: AbstractEvent
     UID::Symbol
@@ -36,6 +37,13 @@ mutable struct LimitedEvent <: AbstractBernoulliEvent
     attempts::Int64
 end
 
+struct AndEvent <: AbstractBernoulliEvent
+    UID::Int64
+    name::String
+    and::Array{AbstractEvent,1}
+    to::Dict
+end
+
 
 lookup(uid::Union{Symbol, Int64}, d::Dict) = d[uid]
 
@@ -62,6 +70,15 @@ function next(e::LimitedEvent)
         return e.to[attempt(e)]
     end
 end
+
+# function next(e::AndEvent)
+#     if and
+#         return e.to["pass"]
+#     elseif more_in_queue
+#         # start the next in the queue
+#     else # case where no met and no more in queue
+#         return :LOM
+# end
 
 is_success(e::AbstractTerminalEvent) = typeof(e) == CompleteMission ? true : false
 
