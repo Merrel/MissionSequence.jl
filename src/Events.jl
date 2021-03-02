@@ -58,10 +58,25 @@ function attempt(e::AbstractEvent)
 end
 
 
+abstract type AbstractState end
+
+mutable struct State <: AbstractState 
+    name::String
+    current::AbstractEvent
+    history::Array{AbstractEvent, 1}
+
+    function State(name::String, current::AbstractEvent)
+        new(name, current, AbstractEvent[])
+    end
+end
+
+
+
 next(e::BeginMission) = e.to
 next(e::AbstractBernoulliEvent) = e.to[attempt(e)]
 next(e::CompleteMission) = :COMPLETE
 next(e::LossOfMission) = :LOM
+
 
 function next(e::LimitedEvent)
     if e.attempts < 1

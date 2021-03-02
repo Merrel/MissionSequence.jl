@@ -14,12 +14,17 @@ DE_Mission:
   type: BeginMission
   dest: 101
 
+TE_Mission:
+  UID: 003
+  type: BeginMission
+  dest: 101
+
 # -------------------------------------
 # Define common launch to orbit tree
 Launch:
   UID:  101
   type: Event
-  prob: 0.99
+  prob: 0.9
   dest:
     pass: 102
     fail: LOM
@@ -27,7 +32,7 @@ Launch:
 Orbit Insertion:
   UID:  102
   type: Event
-  prob: 0.99
+  prob: 0.98
   dest:
     pass: 200
     fail: LOM
@@ -41,6 +46,7 @@ AllLaunchSuccess:
   and:            # and event specifys completion of trees before it
     - AE_Mission
     - DE_Mission
+    - TE_Mission
   dest:
     pass: 201
     fail: LOM
@@ -51,7 +57,7 @@ Docking:
   prob: 0.95
   dest:
     pass: COMPLETE
-    fail: 104
+    fail: 202
 
 Recycle:
   UID:  202

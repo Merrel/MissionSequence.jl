@@ -40,46 +40,174 @@ function load_events(yml::String)
     return event_database
 end
 
+function next!(s::State, db::Dict)
+    # Get the next event UID (includes probability sampling)
+    next_uid = next(s.current)
+    # try
+    #     next_uid = next(s.current)
+    # catch
+    #     println(s)
+    # end
+    # Look up the next event by UID
+    next_event = lookup(next_uid, db)
+    # Add event to history and assign new event
+    push!(s.history, s.current)
+    s.current = next_event
+end
+
+function run_sequence(s::AbstractState, db::Dict)
+    # Get the current state
+    e = s.current
+
+    while !(typeof(e) <: AbstractTerminalEvent)
+        # Next the state object
+        next!(s, db)
+        # Get the current state
+        e = s.current
+    end
+    return s
+end
+
+function next(e::AndEvent, m::Array{State,1}, db::Dict)
+    if typeof(matched_event) == AndEvent
+        # Check if and is satisfied
+        satisfed = all([n in names(m) for n in events(m)[1].and])
+        if satisfed
+            return lookup(matched_event.to["pass"], db)
+        else
+            return lookup(matched_event.to["fail"], db)
+        end
+    end
+end
+
+#
+# =============================================================================
+#
+
 db = load_events("src/A0b_Events.yaml")
 
 init_events = filter(e -> typeof(e.second) == BeginMission, db)
 
-# queue
-queue = [db[1], db[2]]
+function run()
 
-function run_sequence(start::AbstractEvent, db::Dict)
-    e = start
-    # u = next(e)
-    i = 0
-    while !(typeof(e) <: AbstractTerminalEvent)
-        i += 1
-        # Try the event and get the next one
-        # e = lookup(u, db)
-        u = next(e)
-        e = lookup(u, db)
+    queue = [State(init.name, init) for (k, init) in init_events]
+
+    halted = State[]
+    while length(queue) > 0
+        state = pop!(queue)
+        state = run_sequence(state, db)
+        push!(halted, state)
     end
-    return e
+
+    any_lom(q::Array{State, 1})      = any([typeof(state.current) == LossOfMission for state in q])
+    any_complete(q::Array{State, 1}) = any([typeof(state.current) == CompleteMission for state in q])
+
+    function check_termination(h::Array{State, 1}, verbose=false)
+        if any_lom(h)
+            if verbose
+                println("LOSS OF MISSION")
+            end
+            return false
+        elseif any_complete(h)
+            if verbose
+                println("Mission Completed")
+            end
+            return true
+        else
+            if verbose
+                println("continue...")
+            end
+            return true
+        end
+    end
+
+    if !check_termination(halted)
+        return false
+    end
+
+    names(q::Array{State, 1}) = [state.name for state in q]
+    events(q::Array{State, 1}) = [state.current for state in q]
+
+    names(halted)
+
+    events(halted)
+
+    # if match events and satisfy then consume and add to next queue
+
+    # IF THERE ARE MATCHING EVENTS
+
+    # Check for matching events
+
+    # # Add artificial non-matching
+    # hfake = State("fake", db[201])
+    # push!(halted, hfake)
+
+    # halted
+
+    unique_current = []
+    for h in halted
+        if !(h.current in unique_current)
+            push!(unique_current, h.current)
+        end
+    end
+
+    matched_sets = []
+    unmatched_states = State[]
+    for unique_event in unique_current
+        f = filter(s -> s.current === unique_event, halted)
+        if length(f) > 1
+            push!(matched_sets, (unique_event, f))
+        else
+            push!(unmatched_states, f[1])
+        end
+    end
+
+    # Add the unmatched and halted states back to halted
+    halted = unmatched_states
+
+    # AND IF THE MATCHED EVENT IS SATISFIED
+
+    for (matched_event, matched_set) in matched_sets
+        next_event = next(matched_event, matched_set, db)
+        push!(queue, State(matched_event.name, next_event))
+    end
+
+    # Check to see if there are any terminations in the queue
+    if !check_termination(halted)
+        return false
+    end
+
+    # Break if nothing to simulated (nothing in the QUEUE) AND still something in halted
+    if isempty(queue) && !(isempty(queue))
+        println("ERROR UNFINISED")
+    end
+
+    # return queue
+
+    while length(queue) > 0
+        state = pop!(queue)
+        state = run_sequence(state, db)
+        push!(halted, state)
+    end
+
+    # Check to see if there are any terminations in the queue
+    if check_termination(halted, false)
+        # if typeof(halted[1].current) == CompleteMission
+        #     return true
+        # else
+        #     return false
+        # end
+        return true
+    else
+        return false
+    end
 end
 
-halted = []
-while length(queue) > 0
-    state = pop!(queue)
-    state = run_sequence(state, db)
-    push!(halted, state)
-end
+n_runs = 1e6
+res = [run() for i in 1:n_runs]
 
-any_lom(q::Array)      = any([typeof(e) == LossOfMission for e in q])
-any_complete(q::Array) = any([typeof(e) == CompleteMission for e in q])
+sum(res) / n_runs
 
-if any_lom(halted)
-    println("LOSS OF MISSION")
-elseif any_complete(halted)
-    println("Mission Completed")
-else
-    println("continue...")
-end
-
-# init_A = queue[1]
-# run_sequence(init_A, db)
-# init_B = queue[1]
-# run_sequence(init_B, db)
+# for i = 1:10
+#     run()
+# end

@@ -43,35 +43,73 @@ function load_events(yml::String)
     return event_database
 end
 
+# db = load_events("src/A0b_Events.yaml")
+
+# init_events = filter(e -> typeof(e.second) == BeginMission, db)
+
+# # queue
+# # queue = [db[:START], db[:START]]
+
+
+# # path_A = begin
+#     # Start at theinit_events, Launch A
+#     e = init_events[1]
+#     # Go to the next one
+#     u = next(e)
+#     e = db[u]
+
+#     u = next(e)
+#     e = db[u]
+
+#     u = next(e)
+#     e = db[u]
+# # end
+
+# path_B = begin
+#     # Start at the :START, Launch A
+#     e = db[:START]
+#     # Go to the next one
+#     u = next(e)
+#     e = db[u]
+
+#     u = next(e)
+#     e = db[u]
+# end
+
 db = load_events("src/A0b_Events.yaml")
 
 init_events = filter(e -> typeof(e.second) == BeginMission, db)
 
 # queue
-# queue = [db[:START], db[:START]]
+queue = [db[1], db[2]]
 
+queue = [State(init.name, init) for (k, init) in init_events]
 
-# path_A = begin
-    # Start at theinit_events, Launch A
-    e = init_events[1]
-    # Go to the next one
-    u = next(e)
-    e = db[u]
+AE = queue[2]
 
-    u = next(e)
-    e = db[u]
+# next!(s::State, db::Dict) = lookup(next(s.current), db)
 
-    u = next(e)
-    e = db[u]
-# end
-
-path_B = begin
-    # Start at the :START, Launch A
-    e = db[:START]
-    # Go to the next one
-    u = next(e)
-    e = db[u]
-
-    u = next(e)
-    e = db[u]
+function next!(s::State, db::Dict)
+    # Get the next event UID (includes probability sampling)
+    next_uid = next(s.current)
+    # Look up the next event by UID
+    next_event = lookup(next_uid, db)
+    # Add event to history and assign new event
+    push!(s.history, s.current)
+    s.current = next_event
 end
+
+function run_sequence(s::AbstractState, db::Dict)
+    # Get the current state
+    e = s.current
+
+    while !(typeof(e) <: AbstractTerminalEvent)
+        # Next the state object
+        next!(s, db)
+        # Get the current state
+        e = s.current
+    end
+    return s
+end
+
+run_sequence(AE, db)
