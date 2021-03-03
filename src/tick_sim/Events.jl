@@ -16,6 +16,7 @@ end
 
 struct CompleteMission <: AbstractTerminalEvent
     UID::Symbol
+    name::String
 end
 
 struct LossOfMission <: AbstractTerminalEvent
@@ -52,7 +53,7 @@ next(e::AbstractBernoulliEvent) = e.to[attempt(e)]
 next(e::CompleteMission) = :COMPLETE
 next(e::LossOfMission) = :LOM
 
-is_success(e::AbstractTerminalEvent) = typeof(e) == CompleteMission ? true : false
+is_success(e::AbstractEvent) = typeof(e) == CompleteMission ? true : false
 
 
 #
