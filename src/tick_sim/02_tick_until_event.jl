@@ -124,7 +124,9 @@ event_database = Dict{Any, Any}(
     103 =>       wait_α
 )
 
-# Now start the sim by generating an element to traverse the graph
+function run()
+
+    # Now start the sim by generating an element to traverse the graph
 if attempt(launch_α) == :pass
     α = Element("α", launch_α, orbit_α)
     set_duration_from_current!(α)
@@ -135,7 +137,7 @@ end
 
 # Now the Element is traversing an edge of the graph between events
 status(α)
-
+        
 # There is a time required to travese the edge
 @info "Time until next event: $(α.time_to_next)"
 
