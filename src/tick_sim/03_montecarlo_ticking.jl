@@ -1,15 +1,18 @@
 #
 # Sim with global clock, tick!() actions and Elements
 #
+using ProgressMeter
 
 include("Events.jl")
 
 global δₜ = 1.0  # potential for a dynamically updated tick
 
+abstract type Tickable end
+
 ###############################################################################
 # Clock
 
-mutable struct Clock
+mutable struct Clock <: Tickable
     start_time::Number
     time::Number
     function Clock()
@@ -33,7 +36,7 @@ current_event_completed(c::Clock) = false
 ###############################################################################
 # Element
 
-mutable struct Element
+mutable struct Element <: Tickable
     name::String
     current_event::AbstractEvent
     next_event::AbstractEvent
@@ -229,10 +232,14 @@ end
 
 # println("\nα, time = $(α.time_to_next)")
 
-n_runs = 1e6
+iterations = Int(1e6)
 
-res = [run() for n in 1:n_runs]
+results= zeros(iterations)
 
-reliability = sum(res) / n_runs
+@showprogress for n = 1:iterations
+    results[n] = run()
+end
 
-println("$n_runs simulations --> reliability = $reliability")
+reliability = sum(results) / iterations
+
+println("\n$iterations simulations --> reliability = $reliability")
