@@ -5,6 +5,8 @@
 include("MissionSequence.jl")
 using .MissionSequence
 
+using ProgressMeter
+
 
 ###############################################################################
 # Demo Sim
@@ -117,26 +119,50 @@ event_database = Dict{Any, Any}(
     "wait_β"   => wait_β
 )
 
-# Define a sim to tick!() forward in time until the event is completed
-t₀ = 0.0
-tₘₐₓ = 60
-clock = Clock(t₀)
 
-# Start the initial elements
-α = Element("α", start_α, launch_α)
-set_duration_from_current!(α)
-β = Element("β", start_β, launch_β)
-set_duration_from_current!(β)
+function sample()
+    # Define a sim to tick!() forward in time until the event is completed
+    t₀ = 0.0
+    tₘₐₓ = 60
+    clock = Clock(t₀)
 
-# - Active element are currently running an in-process event and running a countdown
-active = Tickable[]
-# - Scheduled events will occur at some time in the future, as defined by a tick
-scheduled = Tickable[α, β]
+    # Start the initial elements
+    α = Element("α", start_α, launch_α)
+    set_duration_from_current!(α)
+    β = Element("β", start_β, launch_β)
+    set_duration_from_current!(β)
 
-# Create the simulation
-sim = Simulation(clock, active, scheduled)
+    # - Active element are currently running an in-process event and running a countdown
+    active = Tickable[]
+    # - Scheduled events will occur at some time in the future, as defined by a tick
+    scheduled = Tickable[α, β]
 
-# Run the simulation and update the sim composite type in place
-run!(sim, event_database, verbose = false)
+    # Create the simulation
+    sim = Simulation(clock, active, scheduled)
 
-status(sim)
+    # Run the simulation and update the sim composite type in place
+    run!(sim, event_database, verbose = false)
+
+    return length(sim.completed) >= 1 ? true : false
+end
+
+#
+# MONTE CARLO SIMULATION
+#
+
+begin
+    iterations = Int(1e6)
+    results= zeros(iterations)
+
+    p = Progress(iterations)
+
+    Threads.@threads for n = 1:iterations
+        results[n] = sample()
+        next!(p)
+    end
+
+    R = sum(results) / iterations
+
+    println("\n$iterations simulations --> reliability = $R")
+
+end

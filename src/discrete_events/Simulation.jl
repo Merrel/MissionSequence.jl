@@ -72,6 +72,10 @@ function Simulation(clock; active, scheduled, completed, retired, waiting, faile
     Simulation(clock, active, scheduled, completed, retired, waiting, failed)
 end
 
+function Simulation(clock::Clock, active::Array{Tickable, 1}, scheduled::Array{Tickable, 1})
+    Simulation(clock, active, scheduled, Tickable[], Tickable[], Tickable[], Tickable[])
+end
+
 function tick!(sim::Simulation)
     tick!(sim.clock)
     tick!(sim.active)
@@ -127,7 +131,7 @@ function handle_active!(sim::Simulation)
     sim.active = new_active
 end
 
-function handle_waiting!(sim::Simulation, event_database::Dict)
+function handle_waiting!(sim::Simulation, event_database::Dict; verbose = false)
     waiting = sim.waiting
 
     and_criteria = unique!([x.current_event.and for x in waiting])
@@ -139,7 +143,9 @@ function handle_waiting!(sim::Simulation, event_database::Dict)
         # Criterion are desribed by an array of events that must have happened
         # Check to see if the criterion is contain in a list of all the waiting previous events
         if criterion ⊆ waiting_prior_events
-            @info "Criterion $criterion SATISFIED"
+            if verbose
+                @info "Criterion $criterion SATISFIED"
+            end
 
             # Get the elements waiting on this and_criteria
             on_deck = filter(x -> x.current_event.and == criterion, waiting)
@@ -169,7 +175,7 @@ function handle_waiting!(sim::Simulation, event_database::Dict)
     sim.waiting = new_waiting
 end
 
-function handle_completed!(sim::Simulation, event_database::Dict)
+function handle_completed!(sim::Simulation, event_database::Dict; verbose = false)
 
     completed = sim.completed
 
@@ -177,10 +183,13 @@ function handle_completed!(sim::Simulation, event_database::Dict)
 
     while length(completed) > 0
         x = pop!(completed)
-        println("\nElement $(x.name)")
-        println("\tcompleted event $(x.current_event.name)")
-        println("\tThe next event is $(x.next_event.name)")
-        println("\t ... trying ...")
+
+        if verbose
+            println("\nElement $(x.name)")
+            println("\tcompleted event $(x.current_event.name)")
+            println("\tThe next event is $(x.next_event.name)")
+            println("\t ... trying ...")
+        end
 
         to = next(x.next_event)
         # println("!!!!!!!")
@@ -188,7 +197,11 @@ function handle_completed!(sim::Simulation, event_database::Dict)
         # println("!!!!!!!")
 
         if to == :LOM
-            @error "LOSS OF MISSION"
+
+            if verbose
+                @error "LOSS OF MISSION"
+            end
+
             push!(x.event_history, x.current_event)
             push!(x.event_history, LossOfMission( :LOM, "NA"))
             push!(sim.failed, x)
@@ -196,7 +209,11 @@ function handle_completed!(sim::Simulation, event_database::Dict)
         #     @warn "COMPLETE"
         #     push!(completed, x)
         elseif to == :DONE
-            @warn "Retire element $(x.name)"
+
+            if verbose
+                @warn "Retire element $(x.name)"
+            end
+
             push!(x.event_history, x.current_event)
             push!(sim.retired, x)
         else
@@ -214,4 +231,72 @@ function handle_completed!(sim::Simulation, event_database::Dict)
 
     end
     sim.completed = new_completed
+end
+
+
+function run!(sim::Simulation, event_database::Dict; tₘₐₓ=1000, verbose = false)
+    while sim.clock.time < tₘₐₓ
+
+        # 1) First step in the iteation is always to advance time
+        tick!(sim)
+        
+        # @info "α: Time until next event: $(α.time_to_next)"
+        # @info "β: Time until next event: $(β.time_to_next)"
+        
+        # 2) Check for new scheduled processes
+        handle_scheduled!(sim)
+
+        # 3) 
+        handle_active!(sim)
+
+        # 4) Check AND events
+        handle_waiting!(sim, event_database, verbose=verbose)
+
+        # 5) 
+        handle_completed!(sim, event_database, verbose=verbose)
+            
+        # Check for both loss of mission and completion of mission --> breaks while loop
+        if length(sim.failed) > 0
+            if verbose
+                @warn "LOSS OF MISSON"
+            end
+            break
+        elseif length(sim.completed) > 0
+            if verbose
+                @warn "$(length(sim.completed)) COMPLETE"
+                # @warn "$(length(filter(x -> !(typeof(x) <: Clock), sim.active))) ACTIVE"
+                @warn "$(length(sim.active)) ACTIVE"
+            end
+            break
+        end
+
+        # Print status of the sim in verbose mode
+        if verbose
+            status(sim)
+            println("\n-------------------------------------------")
+        end
+    end
+end
+
+
+function status(s::Simulation)
+    println("Simulation time: $(s.clock.time)")
+    if length(s.active) > 0
+        println("  > active:\t",    [x for x in s.active])
+    end
+    if length(s.scheduled) > 0
+        println("  > scheduled:\t", [x for x in s.scheduled])
+    end
+    if length(s.completed) > 0
+        println("  > completed:\t", [x for x in s.completed])
+    end
+    if length(s.retired) > 0
+        println("  > retired:\t",   [x for x in s.retired])
+    end
+    if length(s.waiting) > 0
+        println("  > waiting:\t",   [x for x in s.waiting])
+    end
+    if length(s.failed) > 0
+        println("  > failed:\t",    [x for x in s.failed])
+    end
 end
