@@ -21,6 +21,10 @@ function tick!(c::Clock)
     c.time += δₜ
 end
 
+function step!(c::Clock, δₛ)
+    c.time += δₛ
+end
+
 function status(c::Clock)
     println("The time is t = $(c.time)")
 end
@@ -42,6 +46,13 @@ function tick!(active::Array{Tickable, 1})
         tick!(x)
     end
 end
+
+function step!(active::Array{Tickable, 1}, δₛ)
+    for x in active
+        step!(x, δₛ)
+    end
+end
+
 
 
 ###############################################################################
@@ -79,14 +90,22 @@ end
 function tick!(sim::Simulation)
     tick!(sim.clock)
     tick!(sim.active)
+    tick!(sim.scheduled)
     tick!(sim.waiting)
+end
+
+function step!(sim::Simulation, δₛ)
+    step!(sim.clock, δₛ)
+    step!(sim.scheduled, δₛ)
+    step!(sim.active, δₛ)
+    step!(sim.waiting, δₛ)
 end
 
 function handle_scheduled!(sim::Simulation)
     scheduled = sim.scheduled
     if length(scheduled) > 0
         # start new
-        tick!(scheduled)
+        # tick!(scheduled)
         #Check if any scheduled processes should start
         new_scheduled = Tickable[]
         while length(scheduled) > 0
@@ -234,12 +253,22 @@ function handle_completed!(sim::Simulation, event_database::Dict; verbose = fals
 end
 
 
-function run!(sim::Simulation, event_database::Dict; tₘₐₓ=1000, verbose = false)
+function run!(sim::Simulation, event_database::Dict; tₘₐₓ=1000, verbose = false, mode = :discrete)
     while sim.clock.time < tₘₐₓ
 
         # 1) First step in the iteation is always to advance time
-        tick!(sim)
+
+        if mode == :continuous
+            tick!(sim)
         
+        elseif mode == :discrete
+            all_elements = vcat(sim.scheduled, sim.active, sim.waiting)
+
+            δₛ = minimum([E.time_to_next for E in all_elements])
+
+            step!(sim, δₛ)
+        end
+
         # @info "α: Time until next event: $(α.time_to_next)"
         # @info "β: Time until next event: $(β.time_to_next)"
         

@@ -27,6 +27,10 @@ function tick!(E::Element)
     E.time_to_next -= δₜ
 end
 
+function step!(E::Element, δₛ)
+    E.time_to_next -= δₛ
+end
+
 function status(E::Element)
     if E.time_to_next > 0
         println("  $(E.name):\t Current=$(E.current_event.name) --> Next=$(E.next_event.name)")

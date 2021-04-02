@@ -10,28 +10,28 @@ Events:
   # ------------------------------------------ DE
   start_DE:
     Ps: 0.0
-    duration: 1
+    duration: 2
     to:
       pass: Launch_DE
       fail: LOM
   
   launch_DE:
     Ps: 0.95
-    duration: 3
+    duration: 4
     to:
       pass: burnTLI_DE
       fail: LOM
 
   burnTLI_DE:
     Ps: 0.99
-    duration: 5
+    duration: 8
     to:
       pass: burnNRHO_DE
       fail: LOM
 
   burnNRHO_DE:
     Ps: 0.99
-    duration: 5
+    duration: 8
     to:
       pass: loiter_DE
       fail: LOM
@@ -41,64 +41,43 @@ Events:
     and:
       - burnNRHO_DE
       - rendezvous_AE
-    duration: 45
+    duration: 800
     to:
-      pass: docking_DE
-      fail: LOM
-
-  docking_DE:
-    Ps: 0.5
-    duration: 2
-    to:
-      pass: complete_DE
-      fail: retry_DE
-
-  retry_DE:
-    Ps: 0.5
-    duration: 2
-    to:
-      pass: docking_DE
-      fail: LOM
-
-  complete_DE:
-    Ps: 1.0
-    duration: 2
-    to:
-      pass: COMPLETE
+      pass: docking
       fail: LOM
 
   # ------------------------------------------ AE
   start_AE:
     Ps: 0.0
-    duration: 10
+    duration: 200
     to:
       pass: Launch_AE
       fail: LOM
   
   launch_AE:
     Ps: 0.95
-    duration: 3
+    duration: 4
     to:
       pass: burnTLI_AE
       fail: LOM
 
   burnTLI_AE:
     Ps: 0.99
-    duration: 5
+    duration: 4
     to:
       pass: burnNRHO_AE
       fail: LOM
 
   burnNRHO_AE:
     Ps: 0.99
-    duration: 5
+    duration: 8
     to:
       pass: rendezvous_AE
       fail: LOM
 
   rendezvous_AE:
     Ps: 0.99
-    duration: 4
+    duration: 8
     to:
       pass: wait_AE
       fail: LOM
@@ -108,8 +87,29 @@ Events:
     and:
       - burnNRHO_DE
       - rendezvous_AE
-    duration: 45
+    duration: 80
     to:
       pass: DONE
       fail: LOM
 
+  # ------------------------------- After docking
+  docking:
+    Ps: 0.5
+    duration: 4
+    to:
+      pass: complete
+      fail: retry
+
+  retry:
+    Ps: 0.5
+    duration: 4
+    to:
+      pass: docking
+      fail: LOM
+
+  complete:
+    Ps: 1.0
+    duration: 2
+    to:
+      pass: COMPLETE
+      fail: LOM

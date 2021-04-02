@@ -16,7 +16,7 @@ export Event, BeginMission, CompleteMission, LossOfMission, AndEvent, RetireElem
 
 export Element, status, set_duration_from_current!, current_event_completed
 
-export Simulation, Clock, tick!, status, current_event_completed, Tickable, run!,
+export Simulation, Clock, tick!, step!, status, current_event_completed, Tickable, run!,
        handle_active!, handle_completed!, handle_scheduled!, handle_waiting!
 
 #
