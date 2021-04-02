@@ -85,3 +85,40 @@ function process_dst!(ev::AbstractBernoulliEvent)
         end
     end
 end
+
+###############################################################################
+# Loading Events
+
+# 
+
+
+function load(event_spec::Dict)
+    # Start
+    event_database = Dict{Union{Symbol, String}, AbstractEvent}(
+        :LOM       => LossOfMission( :LOM, "NA"),
+        :COMPLETE  => CompleteMission( :COMPLETE ),
+        :DONE      => RetireElement( :DONE ),
+    )
+
+    for (name, spec) in event_spec["Events"]
+        # Get the type if available, else assign
+        try
+            e_type = spec["type"]
+        catch
+            spec["type"] = "Event"
+        end
+
+        to = Dict(Symbol(k)=>Symbol(v)  for (k,v) in spec["to"])
+
+        if spec["type"] == "Event"
+            event_database[name] = Event(name, spec["Ps"], to, spec["duration"])
+
+        elseif spec["type"] == "AND"
+            event_database[name] = AndEvent(name, spec["and"], to, :fail, spec["duration"])
+
+        end
+    end
+
+    # Finally convert all keys to symbols and return
+    return Dict(Symbol(k)=>v  for (k,v) in event_database)
+end

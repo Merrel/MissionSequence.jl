@@ -1,0 +1,115 @@
+#
+# Event Sequence Description
+#
+
+# -----------------------------------------------------------------------------
+# DE (Descent Element Branch)
+
+Events:
+
+  # ------------------------------------------ DE
+  start_DE:
+    Ps: 0.0
+    duration: 1
+    to:
+      pass: Launch_DE
+      fail: LOM
+  
+  launch_DE:
+    Ps: 0.95
+    duration: 3
+    to:
+      pass: burnTLI_DE
+      fail: LOM
+
+  burnTLI_DE:
+    Ps: 0.99
+    duration: 5
+    to:
+      pass: burnNRHO_DE
+      fail: LOM
+
+  burnNRHO_DE:
+    Ps: 0.99
+    duration: 5
+    to:
+      pass: loiter_DE
+      fail: LOM
+
+  loiter_DE:
+    type: AND
+    and:
+      - burnNRHO_DE
+      - rendezvous_AE
+    duration: 45
+    to:
+      pass: docking_DE
+      fail: LOM
+
+  docking_DE:
+    Ps: 0.5
+    duration: 2
+    to:
+      pass: complete_DE
+      fail: retry_DE
+
+  retry_DE:
+    Ps: 0.5
+    duration: 2
+    to:
+      pass: docking_DE
+      fail: LOM
+
+  complete_DE:
+    Ps: 1.0
+    duration: 2
+    to:
+      pass: COMPLETE
+      fail: LOM
+
+  # ------------------------------------------ AE
+  start_AE:
+    Ps: 0.0
+    duration: 10
+    to:
+      pass: Launch_AE
+      fail: LOM
+  
+  launch_AE:
+    Ps: 0.95
+    duration: 3
+    to:
+      pass: burnTLI_AE
+      fail: LOM
+
+  burnTLI_AE:
+    Ps: 0.99
+    duration: 5
+    to:
+      pass: burnNRHO_AE
+      fail: LOM
+
+  burnNRHO_AE:
+    Ps: 0.99
+    duration: 5
+    to:
+      pass: rendezvous_AE
+      fail: LOM
+
+  rendezvous_AE:
+    Ps: 0.99
+    duration: 4
+    to:
+      pass: wait_AE
+      fail: LOM
+
+  wait_AE:
+    type: AND
+    and:
+      - burnNRHO_DE
+      - rendezvous_AE
+    duration: 45
+    to:
+      pass: DONE
+      fail: LOM
+

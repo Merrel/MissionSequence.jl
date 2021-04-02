@@ -137,6 +137,6 @@ scheduled = Tickable[α, β]
 sim = Simulation(clock, active, scheduled)
 
 # Run the simulation and update the sim composite type in place
-run!(sim, event_database, verbose = false)
+run!(sim, event_database, verbose = true)
 
 status(sim)
