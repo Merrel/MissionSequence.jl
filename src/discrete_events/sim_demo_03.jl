@@ -35,36 +35,3 @@ sim = Simulation(clock, active, scheduled)
 run!(sim, event_database, verbose = true, tₘₐₓ = 1200, mode = :discrete)
 
 status(sim)
-
-
-#######################################################################
-#######################################################################
-
-# # Step 1
-# sim.clock.time
-
-# all_elements = vcat(sim.scheduled, sim.active, sim.waiting)
-
-# δₛ = minimum([E.time_to_next for E in all_elements])
-
-# step!(sim, δₛ)
-
-# # Step 2
-# sim.clock.time
-
-# all_elements = vcat(sim.scheduled, sim.active, sim.waiting)
-
-# δₛ = minimum([E.time_to_next for E in all_elements])
-
-# step!(sim, δₛ)
-
-# # Step 3
-# sim.clock.time
-
-# all_elements = vcat(sim.scheduled, sim.active, sim.waiting)
-
-# δₛ = minimum([E.time_to_next for E in all_elements])
-
-# step!(sim, δₛ)
-
-# status(sim)
