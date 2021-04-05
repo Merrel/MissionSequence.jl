@@ -30,21 +30,39 @@ struct LossOfMission <: AbstractTerminalEvent
     cause::Symbol  # will be the UID of the event that led to LOM
 end
 
-struct Event <: AbstractBernoulliEvent
+mutable struct Event <: AbstractBernoulliEvent
     # UID::Int64
     name::Symbol
     pₛ::Number
     to::Dict
     duration::Number
+    counter::Int
+    # Constructor
+    Event(name::Symbol, pₛ::Number, to::Dict, duration::Number) = new(name, pₛ, to, duration, 0)
 end
 
-struct AndEvent <: AbstractEvent
+mutable struct CountLimitedEvent <: AbstractBernoulliEvent
+    # UID::Int64
+    name::Symbol
+    # pₛ::Number
+    max_count::Number
+    to::Dict
+    duration::Number
+    counter::Int
+    # Constructor
+    CountLimitedEvent(name::Symbol, max_count::Number, to::Dict, duration::Number) = new(name, max_count, to, duration, 0)
+end
+
+mutable struct AndEvent <: AbstractEvent
     # UID::Int64
     name::Symbol
     and::Array
     to::Dict
     status::Symbol
     duration::Number
+    counter::Int
+    # Constructor
+    AndEvent(name::Symbol, and::Array, to::Dict, status::Symbol, duration::Number) = new(name, and, to, status, duration, 0) 
 end
 #
 # Methods to evaluate event logic
@@ -52,6 +70,16 @@ end
 
 function attempt(e::AbstractBernoulliEvent)
     if rand(Bernoulli(e.pₛ))
+        e.counter += 1
+        return :pass
+    else
+        return :fail
+    end
+end
+
+function attempt(e::CountLimitedEvent)
+    if e.counter <= e.max_count
+        e.counter += 1
         return :pass
     else
         return :fail
@@ -116,9 +144,25 @@ function load(event_spec::Dict)
         elseif spec["type"] == "AND"
             and = [Symbol(v)  for v in spec["and"]]
             event_database[name] = AndEvent(Symbol(name), and, to, :fail, spec["duration"])
+
+        elseif spec["type"] == "CountLimited"
+            event_database[name] = CountLimitedEvent(Symbol(name), spec["max_count"], to, spec["duration"])
         end
     end
 
     # Finally convert all keys to symbols and return
     return Dict(Symbol(k)=>v  for (k,v) in event_database)
 end
+
+
+function reset_events!(event_database::Dict)
+    # Set all the counters to zero
+    for (k, v) in event_database
+        try
+            event_database[k].counter = 0
+        catch
+        end
+    end
+end
+
+

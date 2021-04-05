@@ -98,10 +98,18 @@ Events:
     duration: 4
     to:
       pass: complete_mission
-      fail: retry
+      fail: retry_counter
 
-  retry:
-    Ps: 0.99
+  # retry:
+  #   Ps: 0.99
+  #   duration: 5
+  #   to:
+  #     pass: docking
+  #     fail: LOM
+
+  retry_counter:
+    type: CountLimited
+    max_count: 2
     duration: 4
     to:
       pass: docking

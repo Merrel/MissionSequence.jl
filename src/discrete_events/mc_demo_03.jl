@@ -32,6 +32,9 @@ function sample()
     # Create the simulation
     sim = Simulation(clock, active, scheduled)
 
+    # Reset the event database
+    reset_events!(event_database)
+
     # Run the simulation and update the sim composite type in place
     # run!(sim, event_database, verbose = false, mode = :continuous)
     run!(sim, event_database, verbose = false, mode = :discrete)
@@ -72,15 +75,14 @@ begin
 
     println("\n$iterations simulations --> reliability = $R")
 
+    # Show terminal events
+    event_bin = Dict(k => 0 for k in unique(penultimate_events))
+
+    for ev in penultimate_events
+        event_bin[ev] += 1
+    end
+
+    event_bin
+
 end
-
-return_codes
-
-event_bin = Dict(k => 0 for k in unique(penultimate_events))
-
-for ev in penultimate_events
-    event_bin[ev] += 1
-end
-
-event_bin
 

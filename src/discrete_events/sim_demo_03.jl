@@ -32,8 +32,11 @@ begin
     # Create the simulation
     sim = Simulation(clock, active, scheduled)
 
+    # Reset the event database
+    reset_events!(event_database)
+
     # Run the simulation and update the sim composite type in place
-    run!(sim, event_database, verbose = false, tₘₐₓ = 100, mode = :discrete)
+    run!(sim, event_database, verbose = false, tₘₐₓ = 1200, mode = :discrete)
 
     status(sim)
     
@@ -44,8 +47,10 @@ end
 
 vcat(sim.completed, sim.failed)[1].event_history
 
+event_database
 
 # vcat(sim.completed, sim.failed)[1].event_history[end].name
-vcat(sim.completed, sim.failed)[1].event_history[end-1].name
+# vcat(sim.completed, sim.failed)[1].event_history[end-1].name
 
 
+# Dict(k => v.counter for (k, v) in event_database)
