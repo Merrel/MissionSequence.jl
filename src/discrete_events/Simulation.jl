@@ -14,7 +14,7 @@ mutable struct Clock <: Tickable
 end
 
 function Base.show(io::IO, c::Clock)
-    print(io, "Clock")
+    print(io, "Clock: time = $(c.time)")
 end
 
 function tick!(c::Clock)
@@ -222,7 +222,7 @@ function handle_completed!(sim::Simulation, event_database::Dict; verbose = fals
             end
 
             push!(x.event_history, x.current_event)
-            push!(x.event_history, LossOfMission( :LOM, "NA"))
+            push!(x.event_history, LossOfMission( :LOM, x.current_event.name))
             push!(sim.failed, x)
         # elseif to == :COMPLETE   !!! This elseif made obselete by frist part of the else
         #     @warn "COMPLETE"
@@ -239,7 +239,10 @@ function handle_completed!(sim::Simulation, event_database::Dict; verbose = fals
             push!(x.event_history, x.current_event)
             x.current_event = x.next_event
             if is_success(x.current_event)
+                # Move to the complete array
                 push!(new_completed, x)
+                # Add completion event to event history
+                push!(x.event_history, x.current_event)
             else
                 new_next = lookup(to, event_database)
                 x.next_event = new_next
@@ -273,16 +276,24 @@ function run!(sim::Simulation, event_database::Dict; tₘₐₓ=1000, verbose = 
         # @info "β: Time until next event: $(β.time_to_next)"
         
         # 2) Check for new scheduled processes
-        handle_scheduled!(sim)
+        if length(sim.scheduled) > 0
+            handle_scheduled!(sim)
+        end
 
         # 3) 
-        handle_active!(sim)
+        if length(sim.active) > 0
+            handle_active!(sim)
+        end
 
         # 4) Check AND events
-        handle_waiting!(sim, event_database, verbose=verbose)
+        if length(sim.waiting) > 0
+            handle_waiting!(sim, event_database, verbose=verbose)
+        end
 
-        # 5) 
-        handle_completed!(sim, event_database, verbose=verbose)
+        # 5)
+        if length(sim.completed) > 0 
+            handle_completed!(sim, event_database, verbose=verbose)
+        end
             
         # Check for both loss of mission and completion of mission --> breaks while loop
         if length(sim.failed) > 0

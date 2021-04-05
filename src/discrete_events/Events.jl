@@ -10,7 +10,7 @@ abstract type AbstractTerminalEvent <: AbstractEvent end
 
 struct BeginMission <: AbstractEvent
     # UID::Int64
-    name::String
+    name::Symbol
     to::Int64
     duration::Number
 end
@@ -27,12 +27,12 @@ end
 
 struct LossOfMission <: AbstractTerminalEvent
     name::Symbol
-    cause::String  # will be the UID of the event that led to LOM
+    cause::Symbol  # will be the UID of the event that led to LOM
 end
 
 struct Event <: AbstractBernoulliEvent
     # UID::Int64
-    name::String
+    name::Symbol
     pₛ::Number
     to::Dict
     duration::Number
@@ -40,7 +40,7 @@ end
 
 struct AndEvent <: AbstractEvent
     # UID::Int64
-    name::String
+    name::Symbol
     and::Array
     to::Dict
     status::Symbol
@@ -95,7 +95,7 @@ end
 function load(event_spec::Dict)
     # Start
     event_database = Dict{Union{Symbol, String}, AbstractEvent}(
-        :LOM       => LossOfMission( :LOM, "NA"),
+        :LOM       => LossOfMission( :LOM, :NA),
         :COMPLETE  => CompleteMission( :COMPLETE ),
         :DONE      => RetireElement( :DONE ),
     )
@@ -111,11 +111,11 @@ function load(event_spec::Dict)
         to = Dict(Symbol(k)=>Symbol(v)  for (k,v) in spec["to"])
 
         if spec["type"] == "Event"
-            event_database[name] = Event(name, spec["Ps"], to, spec["duration"])
+            event_database[name] = Event(Symbol(name), spec["Ps"], to, spec["duration"])
 
         elseif spec["type"] == "AND"
-            event_database[name] = AndEvent(name, spec["and"], to, :fail, spec["duration"])
-
+            and = [Symbol(v)  for v in spec["and"]]
+            event_database[name] = AndEvent(Symbol(name), and, to, :fail, spec["duration"])
         end
     end
 

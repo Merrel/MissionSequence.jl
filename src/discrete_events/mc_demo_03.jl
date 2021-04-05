@@ -36,7 +36,14 @@ function sample()
     # run!(sim, event_database, verbose = false, mode = :continuous)
     run!(sim, event_database, verbose = false, mode = :discrete)
 
-    return length(sim.completed) >= 1 ? true : false
+    # Get the final event
+    terminal_event = vcat(sim.completed, sim.failed)[1].event_history[end].name
+    penultimate_event = vcat(sim.completed, sim.failed)[1].event_history[end-1].name
+
+    # Process return code
+    return_code = length(sim.completed) >= 1 ? true : false
+
+    return (return_code, terminal_event, penultimate_event)
 end
 
 #
@@ -44,18 +51,36 @@ end
 #
 
 begin
-    iterations = Int(1e6)
-    results= zeros(iterations)
+    # Set the number of iterations
+    iterations = Int(1e5)
 
+    # Preallocate the return arryas
+    return_codes = Vector{Number}(undef,iterations)
+    penultimate_events = Vector{Symbol}(undef,iterations)
+    final_events = Vector{Symbol}(undef,iterations)
+
+    # Create progress bar
     p = Progress(iterations)
 
+    # Perform sampling in multi-threaded mode
     Threads.@threads for n = 1:iterations
-        results[n] = sample()
+        return_codes[n], final_events[n], penultimate_events[n] = sample()
         next!(p)
     end
 
-    R = sum(results) / iterations
+    R = sum(return_codes) / iterations
 
     println("\n$iterations simulations --> reliability = $R")
 
 end
+
+return_codes
+
+event_bin = Dict(k => 0 for k in unique(penultimate_events))
+
+for ev in penultimate_events
+    event_bin[ev] += 1
+end
+
+event_bin
+
