@@ -1,0 +1,69 @@
+#
+# A01 Mission Events
+#
+
+# -------------------------------------
+# Define the unique starting points
+AE_Mission:
+  UID:  001
+  type: BeginMission
+  dest: 101
+
+DE_Mission:
+  UID: 002
+  type: BeginMission
+  dest: 101
+
+TE_Mission:
+  UID: 003
+  type: BeginMission
+  dest: 101
+
+# -------------------------------------
+# Define common launch to orbit tree
+Launch:
+  UID:  101
+  type: Event
+  prob: 0.9
+  dest:
+    pass: 102
+    fail: LOM
+
+Orbit Insertion:
+  UID:  102
+  type: Event
+  prob: 0.98
+  dest:
+    pass: 200
+    fail: LOM
+
+# -------------------------------------
+# Define the AE+DE combined tree
+
+AllLaunchSuccess:
+  UID: 200
+  type: AndEvent
+  and:            # and event specifys completion of trees before it
+    - AE_Mission
+    - DE_Mission
+    - TE_Mission
+  dest:
+    pass: 201
+    fail: LOM
+
+Docking:
+  UID:  201
+  type: Event
+  prob: 0.95
+  dest:
+    pass: COMPLETE
+    fail: 202
+
+Recycle:
+  UID:  202
+  type: LimitedEvent
+  prob: 0.70
+  dest:
+    pass: 201
+    fail: LOM
+  attempts: 10
