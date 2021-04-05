@@ -1,0 +1,123 @@
+#
+# Event Sequence Description
+#
+
+# -----------------------------------------------------------------------------
+# DE (Descent Element Branch)
+
+Events:
+
+  # ------------------------------------------ DE
+  start_DE:
+    Ps: 1.0
+    duration: 2
+    to:
+      pass: Launch_DE
+      fail: LOM
+  
+  launch_DE:
+    Ps: 0.95
+    duration: 4
+    to:
+      pass: burnTLI_DE
+      fail: LOM
+
+  burnTLI_DE:
+    Ps: 0.98
+    duration: 8
+    to:
+      pass: burnNRHO_DE
+      fail: LOM
+
+  burnNRHO_DE:
+    Ps: 0.98
+    duration: 8
+    to:
+      pass: loiter_DE
+      fail: LOM
+
+  loiter_DE:
+    type: AND
+    and:
+      - burnNRHO_DE
+      - rendezvous_AE
+    duration: 40
+    to:
+      pass: docking
+      fail: LOM
+
+  # ------------------------------------------ AE
+  start_AE:
+    Ps: 1.0
+    duration: 24
+    to:
+      pass: Launch_AE
+      fail: LOM
+  
+  launch_AE:
+    Ps: 0.95
+    duration: 4
+    to:
+      pass: burnTLI_AE
+      fail: LOM
+
+  burnTLI_AE:
+    Ps: 0.98
+    duration: 4
+    to:
+      pass: burnNRHO_AE
+      fail: LOM
+
+  burnNRHO_AE:
+    Ps: 0.98
+    duration: 8
+    to:
+      pass: rendezvous_AE
+      fail: LOM
+
+  rendezvous_AE:
+    Ps: 0.96
+    duration: 12
+    to:
+      pass: loiter_AE
+      fail: LOM
+
+  loiter_AE:
+    type: AND
+    and:
+      - burnNRHO_DE
+      - rendezvous_AE
+    duration: 40
+    to:
+      pass: DONE
+      fail: LOM
+
+  # ------------------------------- After docking
+  docking:
+    Ps: 0.1
+    duration: 4
+    to:
+      pass: complete_mission
+      fail: retry_counter
+
+  # retry:
+  #   Ps: 0.99
+  #   duration: 5
+  #   to:
+  #     pass: docking
+  #     fail: LOM
+
+  retry_counter:
+    type: CountLimited
+    max_count: 20
+    duration: 5
+    to:
+      pass: docking
+      fail: LOM
+
+  complete_mission:
+    Ps: 1.0
+    duration: 2
+    to:
+      pass: COMPLETE
+      fail: LOM
