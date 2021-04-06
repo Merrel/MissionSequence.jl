@@ -35,7 +35,29 @@ begin
     reset_events!(event_database)
 
     # Run the simulation and update the sim composite type in place
-    run!(sim, event_database, verbose = true, tₘₐₓ = 1200, mode = :discrete)
+    run!(sim, event_database, verbose = true, tₘₐₓ = 500, mode = :continuous)
 
     status(sim)
 end
+
+# ev = event_spec["Events"]["launch_DE"]
+# dist_spec = event_spec["Events"]["launch_DE"]["Pf_dist"]
+
+# ev_dist = parse_distribution(dist_spec)
+
+# [rand(ev_dist) for _ = 1:10]
+
+# plot(ev_dist)
+
+using Distributions
+# using Plots, StatsPlots
+
+
+
+
+
+event_database
+
+sample_distributions!(event_database, event_spec)
+
+event_database

@@ -33,18 +33,18 @@ end
 mutable struct Event <: AbstractBernoulliEvent
     # UID::Int64
     name::Symbol
-    pₛ::Number
+    𝑃::Number
     to::Dict
     duration::Number
     counter::Int
     # Constructor
-    Event(name::Symbol, pₛ::Number, to::Dict, duration::Number) = new(name, pₛ, to, duration, 0)
+    Event(name::Symbol, 𝑃::Number, to::Dict, duration::Number) = new(name, 𝑃, to, duration, 0)
 end
-
-mutable struct CountLimitedEvent <: AbstractBernoulliEvent
+    
+mutable struct CountLimitedEvent <: AbstractEvent
     # UID::Int64
     name::Symbol
-    # pₛ::Number
+    # 𝑃::Number
     max_count::Number
     to::Dict
     duration::Number
@@ -69,7 +69,7 @@ end
 #
 
 function attempt(e::AbstractBernoulliEvent)
-    if rand(Bernoulli(e.pₛ))
+    if rand(Bernoulli(1 - e.𝑃))
         e.counter += 1
         return :pass
     else
@@ -93,6 +93,7 @@ end
 next(e::BeginMission) = e.to
 next(e::AndEvent) = e.to[e.status]
 next(e::AbstractBernoulliEvent) = e.to[attempt(e)]
+next(e::CountLimitedEvent) = e.to[attempt(e)]
 next(e::CompleteMission) = :COMPLETE
 next(e::LossOfMission) = :LOM
 next(e::RetireElement) = :DONE
@@ -115,7 +116,7 @@ function process_dst!(ev::AbstractBernoulliEvent)
 end
 
 ###############################################################################
-# Loading Events
+# Loading Events from file
 
 # 
 
@@ -139,7 +140,7 @@ function load(event_spec::Dict)
         to = Dict(Symbol(k)=>Symbol(v)  for (k,v) in spec["to"])
 
         if spec["type"] == "Event"
-            event_database[name] = Event(Symbol(name), spec["Ps"], to, spec["duration"])
+            event_database[name] = Event(Symbol(name), spec["Pf"], to, spec["duration"])
 
         elseif spec["type"] == "AND"
             and = [Symbol(v)  for v in spec["and"]]
@@ -154,6 +155,43 @@ function load(event_spec::Dict)
     return Dict(Symbol(k)=>v  for (k,v) in event_database)
 end
 
+###############################################################################
+# Sampling Events according to given distributions
+
+function parse_distribution(dist_spec::String)
+    dist_name   = string(match(r"^(.*)\(.*\)", dist_spec)[1])
+    dist_params = string(match(r"^.*\((.*)\)", dist_spec)[1])
+
+    dist_params = parse.(Float64,
+                strip.(
+                split(dist_params, ","
+                )))
+
+
+    distFxn = getfield(Main, Symbol(dist_name))
+
+    return distFxn(dist_params...)
+end
+
+
+function sample_distributions!(event_database, event_spec)
+    for (k, ev) in event_database
+        try
+            # Parse the string to a distribution object that we can sample
+            spec = event_spec["Events"][string(k)]
+            ev_dist = parse_distribution(spec["Pf_dist"])
+            # Sample from the distribution
+            ev.𝑃 = rand(ev_dist)
+        catch
+        end
+
+    end
+    return nothing
+end
+
+
+###############################################################################
+# Managing Event fields
 
 function reset_events!(event_database::Dict)
     # Set all the counters to zero

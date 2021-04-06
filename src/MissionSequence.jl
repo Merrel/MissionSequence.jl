@@ -12,7 +12,7 @@ import YAML
 export YAML
 
 export Event, BeginMission, CompleteMission, LossOfMission, AndEvent, RetireElement, 
-       next, is_success, lookup, load, reset_events!
+       next, is_success, lookup, load, reset_events!, sample_distributions!
 
 export Element, status, set_duration_from_current!, current_event_completed
 

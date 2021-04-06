@@ -9,29 +9,30 @@ Events:
 
   # ------------------------------------------ DE
   start_DE:
-    Ps: 1.0
+    Pf: 0.0
     duration: 2
     to:
       pass: Launch_DE
       fail: LOM
   
   launch_DE:
-    Ps: 1.0
-    duration: 4
+    Pf: 0.0
+    Pf_dist: Beta(2, 100)
+    duration: 2
     to:
       pass: burnTLI_DE
       fail: LOM
 
   burnTLI_DE:
-    Ps: 1.0
-    duration: 8
+    Pf: 0.0
+    duration: 2
     to:
       pass: burnNRHO_DE
       fail: LOM
 
   burnNRHO_DE:
-    Ps: 1.0
-    duration: 8
+    Pf: 0.0
+    duration: 2
     to:
       pass: loiter_DE
       fail: LOM
@@ -40,83 +41,95 @@ Events:
     type: AND
     and:
       - burnNRHO_DE
-      - rendezvous_AE
-    duration: 40
+      - docking_AE
+    duration: 120
     to:
-      pass: docking
+      pass: loiter_together
       fail: LOM
 
   # ------------------------------------------ AE
   start_AE:
-    Ps: 1.0
-    duration: 24
+    Pf: 0.0
+    duration: 5
     to:
       pass: Launch_AE
       fail: LOM
   
   launch_AE:
-    Ps: 1.0
-    duration: 4
+    Pf: 0.0
+    Pf_dist: Beta(2, 100)
+    duration: 2
     to:
       pass: burnTLI_AE
       fail: LOM
 
   burnTLI_AE:
-    Ps: 1.0
-    duration: 4
+    Pf: 0.0
+    duration: 2
     to:
       pass: burnNRHO_AE
       fail: LOM
 
   burnNRHO_AE:
-    Ps: 1.0
-    duration: 8
+    Pf: 0.0
+    duration: 2
     to:
       pass: rendezvous_AE
       fail: LOM
 
   rendezvous_AE:
-    Ps: 1.0
-    duration: 12
+    Pf: 0.0
+    duration: 4
     to:
       pass: loiter_AE
       fail: LOM
 
   loiter_AE:
-    type: AND
-    and:
-      - burnNRHO_DE
-      - rendezvous_AE
-    duration: 40
+    Pf: 0.0
+    duration: 2
     to:
-      pass: DONE
+      pass: docking_AE
       fail: LOM
 
-  # ------------------------------- After docking
-  docking:
-    Ps: 0.1
-    duration: 4
+  docking_AE:
+    Pf: 0.9
+    duration: 2
     to:
-      pass: complete_mission
+      pass: retire_AE
       fail: retry_counter
-
-  # retry:
-  #   Ps: 0.99
-  #   duration: 5
-  #   to:
-  #     pass: docking
-  #     fail: LOM
 
   retry_counter:
     type: CountLimited
-    max_count: 20
-    duration: 5
+    max_count: 40
+    duration: 4
     to:
-      pass: docking
+      pass: docking_AE
+      fail: LOM
+
+  retire_AE:
+    type: AND
+    and:
+      - burnNRHO_DE
+      - docking_AE
+    duration: 1
+    to:
+      pass: DONE
+      fail: LOM
+  # ------------------------------- After docking
+
+  loiter_together:
+    # type: AND
+    # and:
+    #   - burnNRHO_DE
+    #   - docking_AE
+    Pf: 0.0
+    duration: 4
+    to:
+      pass: complete_mission
       fail: LOM
 
   complete_mission:
-    Ps: 1.0
+    Pf: 0.0
     duration: 2
     to:
       pass: COMPLETE

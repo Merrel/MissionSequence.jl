@@ -50,11 +50,11 @@ end
 
 begin
     # Define the events in the sim; these make up a directed graph
-    event_spec = YAML.load_file("./missions/mission01.yml")
+    event_spec = YAML.load_file("./missions/mission01b.yml")
     event_database = load(event_spec)
 
     # Set the number of iterations
-    iterations = Int(1e5)
+    iterations = Int(1e4)
 
     # Preallocate the return arryas
     return_codes = Vector{Number}(undef,iterations)
@@ -84,3 +84,4 @@ begin
     event_bin
 
 end
+
