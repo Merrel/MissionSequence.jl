@@ -39,25 +39,3 @@ begin
 
     status(sim)
 end
-
-# ev = event_spec["Events"]["launch_DE"]
-# dist_spec = event_spec["Events"]["launch_DE"]["Pf_dist"]
-
-# ev_dist = parse_distribution(dist_spec)
-
-# [rand(ev_dist) for _ = 1:10]
-
-# plot(ev_dist)
-
-using Distributions
-# using Plots, StatsPlots
-
-
-
-
-
-event_database
-
-sample_distributions!(event_database, event_spec)
-
-event_database
