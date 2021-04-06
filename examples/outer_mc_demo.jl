@@ -6,6 +6,7 @@ include("../src/MissionSequence.jl")
 using .MissionSequence
 
 using ProgressMeter
+using UnicodePlots
 
 #
 # Single Sample of Event Sequence
@@ -35,7 +36,6 @@ function sample_sequence(event_database::Dict)
     reset_events!(event_database)
 
     # Run the simulation and update the sim composite type in place
-    # run!(sim, event_database, verbose = false, mode = :continuous)
     run!(sim, event_database, verbose = false, mode = :discrete)
 
     # Get the final event
@@ -54,26 +54,17 @@ end
 
 function sample_innerMC(event_database, iterations)
 
-    # Set the number of iterations
-    # iterations = Int(1e4)
-
     # Preallocate the return arryas
     return_codes = Vector{Number}(undef,iterations)
     penultimate_events = Vector{Symbol}(undef,iterations)
     final_events = Vector{Symbol}(undef,iterations)
 
-    # # Create progress bar
-    # p = Progress(iterations)
-
     # Perform sampling in multi-threaded mode
     Threads.@threads for n = 1:iterations
-        return_codes[n], final_events[n], penultimate_events[n] = sample(event_database)
-        # next!(p)
+        return_codes[n], final_events[n], penultimate_events[n] = sample_sequence(event_database)
     end
 
     R = sum(return_codes) / iterations
-
-    # println("\n$iterations simulations --> reliability = $R")
 
     # # Show terminal events
     # event_bin = Dict(k => 0 for k in unique(penultimate_events))
@@ -81,8 +72,6 @@ function sample_innerMC(event_database, iterations)
     # for ev in penultimate_events
     #     event_bin[ev] += 1
     # end
-
-    # event_bin
 
     return R
 end
@@ -115,10 +104,12 @@ begin
 
 end
 
-using Plots, StatsPlots
+histogram(R_samples, nbins=12)
 
-plot(
-    histogram(R_samples, c=:tomato, alpha=0.6, xlims=(0.7,0.9)),
-    density(R_samples, xlims=(0.7,0.9)),
-    layout = (2, 1)
-)
+# using Plots, StatsPlots
+
+# plot(
+#     histogram(R_samples, c=:tomato, alpha=0.6, xlims=(0.7,0.9)),
+#     density(R_samples, xlims=(0.7,0.9)),
+#     layout = (2, 1)
+# )
